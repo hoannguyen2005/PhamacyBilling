@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  pharmacy-db:
+    image: postgres:15-alpine
+    container_name: pharmacy-db
+    environment:
+      - POSTGRES_DB=PharmacyBillingDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgresPassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pharmacy-billing-service:
+    image: pharmacy-billing-service:latest
+    build:
+      context: ./PharmacyBillingService
+      dockerfile: Dockerfile
+    container_name: pharmacy-billing-service
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=pharmacy-db;Port=5432;Database=PharmacyBillingDB;Username=postgres;Password=postgresPassword123!
+      - JwtSettings__Secret=SuperSecretKeyForPharmacyAndBillingServiceProject1234567890!
+      - JwtSettings__Issuer=PharmacyBillingService
+      - JwtSettings__Audience=ClinicApplication
+    depends_on:
+      - pharmacy-db
+
+volumes:
+  postgres_data:
